@@ -44,10 +44,11 @@ module Tagalong
     end
 
     def disassociate_tag_from_taggable(tag, taggable)
-      taggable_tagging = TagalongTagging.find_by_tagalong_tag_id_and_taggable_id(tag.id, taggable.id)
-      TagalongTagging.destroy(taggable_tagging.id)
-      taggable.tagalong_tags(true)
-      decrement_tag_number_of_references(tag)
+      TagalongTagging.transaction do
+        TagalongTagging.destroy_all(tagalong_tag_id: tag.id, taggable_id: taggable.id, taggable_type: taggable.class.to_s)
+        taggable.tagalong_tags(true)
+        decrement_tag_number_of_references(tag)
+      end
     end
 
     def increment_tag_number_of_references(tag)
